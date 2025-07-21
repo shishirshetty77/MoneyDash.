@@ -28,7 +28,7 @@ export default function TransactionChart({ transactions, isDarkMode }: Transacti
   const expensesByCategory = transactions
     .filter(t => t.type === 'expense')
     .reduce((acc, transaction) => {
-      acc[transaction.category] = (acc[transaction.category] || 0) + transaction.amount;
+      acc[transaction.category] = (acc[transaction.category] || 0) + Math.abs(transaction.amount);
       return acc;
     }, {} as Record<string, number>);
 
@@ -51,7 +51,7 @@ export default function TransactionChart({ transactions, isDarkMode }: Transacti
     if (transaction.type === 'income') {
       acc[month].income += transaction.amount;
     } else {
-      acc[month].expenses += transaction.amount;
+      acc[month].expenses += Math.abs(transaction.amount);
     }
     
     return acc;

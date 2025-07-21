@@ -3,12 +3,13 @@ import Image from "next/image";
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Transaction, TransactionCategory, TransactionFilters } from '@/types';
+import { Transaction, TransactionCategory, TransactionFilters, Budget } from '@/types';
 import TransactionForm from '@/app/components/TransactionForm';
 import TransactionList from '@/app/components/TransactionList';
 import Summary from '@/app/components/Summary';
 import TransactionChart from '@/app/components/TransactionChart';
 import SavingsGoals from '@/app/components/SavingsGoals';
+import BudgetManager from '@/app/components/BudgetManager';
 import { saveToLocalStorage, loadFromLocalStorage } from '@/app/utils/localStorage';
 
 export default function Home() {
@@ -19,13 +20,16 @@ export default function Home() {
     year: new Date().getFullYear()
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const savedTransactions = loadFromLocalStorage<Transaction[]>('transactions', []);
+    const savedBudgets = loadFromLocalStorage<Budget[]>('budgets', []);
     const savedTheme = loadFromLocalStorage<string>('theme', 'light');
     
     setTransactions(savedTransactions);
+    setBudgets(savedBudgets);
     setIsDarkMode(savedTheme === 'dark');
     
     // Apply theme to document
@@ -38,6 +42,11 @@ export default function Home() {
   useEffect(() => {
     saveToLocalStorage('transactions', transactions);
   }, [transactions]);
+
+  // Save budgets to localStorage whenever they change
+  useEffect(() => {
+    saveToLocalStorage('budgets', budgets);
+  }, [budgets]);
 
   // Save theme to localStorage whenever it changes
   useEffect(() => {
@@ -122,14 +131,23 @@ export default function Home() {
             <div className="space-y-8">
               <Summary transactions={transactions} filters={filters} />
               <TransactionChart transactions={transactions} isDarkMode={isDarkMode} />
+              <BudgetManager
+                budgets={budgets}
+                transactions={transactions}
+                onCreateBudget={(budget) => setBudgets(prev => [...prev, { ...budget, id: Date.now().toString(), createdAt: new Date().toISOString() }])}
+                onUpdateBudget={(id, updatedBudget) => setBudgets(prev => prev.map(b => b.id === id ? { ...b, ...updatedBudget } : b))}
+                onDeleteBudget={(id) => setBudgets(prev => prev.filter(b => b.id !== id))}
+                isDarkMode={isDarkMode}
+              />
             </div>
 
             {/* Right Column - Transaction List */}
             <div>
               <TransactionList 
                 transactions={transactions}
-                filters={filters}
-                onFiltersChange={setFilters}
+                categoryFilter={filters.category === 'All' ? 'all' : filters.category}
+                startDate={`${filters.year}-${String(filters.month).padStart(2, '0')}-01`}
+                endDate={`${filters.year}-${String(filters.month).padStart(2, '0')}-31`}
                 onDeleteTransaction={deleteTransaction}
               />
             </div>

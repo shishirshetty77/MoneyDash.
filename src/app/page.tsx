@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Transaction, TransactionFilters, Budget } from '@/types';
 import TransactionForm from '@/app/components/TransactionForm';
 import TransactionList from '@/app/components/TransactionList';
@@ -9,8 +10,12 @@ import TransactionChart from '@/app/components/TransactionChart';
 import SavingsGoals from '@/app/components/SavingsGoals';
 import BudgetManager from '@/app/components/BudgetManager';
 import { saveToLocalStorage, loadFromLocalStorage } from '@/app/utils/localStorage';
+import { useAuth } from '@/contexts/AuthContext';
+import { getTransactions, addTransaction as addTransactionDb, deleteTransaction as deleteTransactionDb, getBudgets, addBudget, updateBudget, deleteBudget } from '@/lib/supabase-data';
 
 export default function Home() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filters] = useState<TransactionFilters>({
     category: 'All',
@@ -19,32 +24,47 @@ export default function Home() {
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
-  // Load data from localStorage on component mount
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const savedTransactions = loadFromLocalStorage<Transaction[]>('transactions', []);
-    const savedBudgets = loadFromLocalStorage<Budget[]>('budgets', []);
+    if (!loading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, loading, router]);
+
+  // Load data from Supabase and localStorage theme on component mount
+  useEffect(() => {
+    async function fetchData() {
+      if (!user) return;
+      
+      setDataLoading(true);
+      try {
+        const [transactionData, budgetData] = await Promise.all([
+          getTransactions(),
+          getBudgets()
+        ]);
+        
+        setTransactions(transactionData || []);
+        setBudgets(budgetData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    }
+
+    // Load theme from localStorage
     const savedTheme = loadFromLocalStorage<string>('theme', 'light');
-    
-    setTransactions(savedTransactions);
-    setBudgets(savedBudgets);
     setIsDarkMode(savedTheme === 'dark');
     
     // Apply theme to document
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
     }
-  }, []);
 
-  // Save transactions to localStorage whenever they change
-  useEffect(() => {
-    saveToLocalStorage('transactions', transactions);
-  }, [transactions]);
-
-  // Save budgets to localStorage whenever they change
-  useEffect(() => {
-    saveToLocalStorage('budgets', budgets);
-  }, [budgets]);
+    fetchData();
+  }, [user]);
 
   // Save theme to localStorage whenever it changes
   useEffect(() => {
@@ -58,16 +78,55 @@ export default function Home() {
     }
   }, [isDarkMode]);
 
-  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transaction,
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
-    };
-    setTransactions(prev => [...prev, newTransaction]);
+  const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
+    try {
+      const newTransaction = await addTransactionDb(transaction);
+      if (newTransaction) {
+        setTransactions(prev => [...prev, newTransaction]);
+      }
+    } catch (error) {
+      console.error('Error adding transaction:', error);
+    }
   };
 
-  const deleteTransaction = (id: string) => {
-    setTransactions(prev => prev.filter(t => t.id !== id));
+  const deleteTransaction = async (id: string) => {
+    try {
+      await deleteTransactionDb(id);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+    }
+  };
+
+  const handleCreateBudget = async (budget: Omit<Budget, 'id' | 'createdAt'>) => {
+    try {
+      const newBudget = await addBudget(budget);
+      if (newBudget) {
+        setBudgets(prev => [...prev, newBudget]);
+      }
+    } catch (error) {
+      console.error('Error creating budget:', error);
+    }
+  };
+
+  const handleUpdateBudget = async (id: string, updatedBudget: Partial<Budget>) => {
+    try {
+      const updated = await updateBudget(id, updatedBudget);
+      if (updated) {
+        setBudgets(prev => prev.map(b => b.id === id ? updated : b));
+      }
+    } catch (error) {
+      console.error('Error updating budget:', error);
+    }
+  };
+
+  const handleDeleteBudget = async (id: string) => {
+    try {
+      await deleteBudget(id);
+      setBudgets(prev => prev.filter(b => b.id !== id));
+    } catch (error) {
+      console.error('Error deleting budget:', error);
+    }
   };
 
   const exportToCSV = () => {
@@ -181,9 +240,9 @@ export default function Home() {
               <BudgetManager
                 budgets={budgets}
                 transactions={transactions}
-                onCreateBudget={(budget) => setBudgets(prev => [...prev, { ...budget, id: Date.now().toString(), createdAt: new Date().toISOString() }])}
-                onUpdateBudget={(id, updatedBudget) => setBudgets(prev => prev.map(b => b.id === id ? { ...b, ...updatedBudget } : b))}
-                onDeleteBudget={(id) => setBudgets(prev => prev.filter(b => b.id !== id))}
+                onCreateBudget={handleCreateBudget}
+                onUpdateBudget={handleUpdateBudget}
+                onDeleteBudget={handleDeleteBudget}
                 isDarkMode={isDarkMode}
               />
             </div>

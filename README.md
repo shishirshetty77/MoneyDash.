@@ -1,8 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Personal Finance Tracker
+
+A comprehensive personal finance management application built with Next.js, TypeScript, and Tailwind CSS. Track your income, expenses, savings goals, and visualize your financial data with interactive charts—all without requiring an account or backend integration.
+
+## Features
+
+### 📊 Transaction Management
+- Add income and expense transactions with detailed categorization
+- Automatic amount handling (positive for income, negative for expenses)
+- Filter transactions by category and date range
+- Delete transactions as needed
+- Export all transaction data as CSV
+
+### 📈 Visual Analytics
+- Monthly summary showing total income, expenses, and net savings
+- Interactive pie chart for expense breakdown by category
+- Bar chart comparing monthly income vs expenses over time
+- Dynamic charts that update as you add or filter transactions
+
+### 🎯 Savings Goals
+- Set multiple savings goals with target amounts and deadlines
+- Track progress with visual progress bars
+- Add or withdraw money from goals
+- Automatic deadline tracking with overdue notifications
+- Congratulatory messages for completed goals
+
+### 🎨 User Experience
+- Dark/Light mode toggle with persistent preference
+- Fully responsive design for desktop and mobile
+- Clean, intuitive interface
+- Local data persistence using browser localStorage
+- No account or signup required
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -10,27 +51,84 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How to Use
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Adding Transactions
+1. Click "Add Transaction" on the dashboard
+2. Fill in the transaction details:
+   - **Description**: What the transaction was for (e.g., "Groceries")
+   - **Amount**: The monetary amount
+   - **Type**: Select "Income" or "Expense"
+   - **Category**: Choose from predefined categories (Food, Salary, Entertainment, etc.)
+   - **Date**: When the transaction occurred
+3. Click "Add Transaction" to save
 
-## Learn More
+### Viewing Your Data
+- **Transaction List**: View all transactions with color-coded amounts (green for income, red for expenses)
+- **Monthly Summary**: See your financial overview for any selected month
+- **Charts**: Visualize spending patterns and income trends
+- **Filters**: Use category and date filters to focus on specific data
 
-To learn more about Next.js, take a look at the following resources:
+### Managing Savings Goals
+1. Navigate to the "Savings Goals" section
+2. Click "Add New Goal"
+3. Set your goal details:
+   - **Goal Name**: What you're saving for
+   - **Target Amount**: How much you want to save
+   - **Deadline**: When you want to reach the goal
+   - **Category**: Type of goal for organization
+4. Add or withdraw money as you progress toward your goal
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Exporting Data
+- Click the "Export CSV" button to download all your transaction data
+- Use the CSV file with spreadsheet applications or other financial tools
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Data Storage
 
-## Deploy on Vercel
+All your data is stored locally in your browser using `localStorage`. This means:
+- ✅ No account required
+- ✅ Data persists across browser sessions
+- ✅ Complete privacy—your data never leaves your device
+- ⚠️ Data is tied to your specific browser and device
+- ⚠️ Clearing browser data will remove your financial records
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: [Next.js 14](https://nextjs.org) with App Router
+- **Language**: TypeScript for type safety
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) for responsive design
+- **Charts**: [Recharts](https://recharts.org) for data visualization
+- **Icons**: Lucide React for consistent iconography
+- **Storage**: Browser localStorage for data persistence
+
+## Project Structure
+
+```
+finance-tracker/
+├── app/
+│   ├── globals.css          # Global styles
+│   ├── layout.tsx           # Root layout component
+│   └── page.tsx             # Main application page
+├── components/
+│   ├── AddTransaction.tsx   # Transaction input form
+│   ├── TransactionList.tsx  # Transaction display and filtering
+│   ├── MonthlySummary.tsx   # Financial summary component
+│   ├── Charts.tsx           # Data visualization components
+│   └── SavingsGoals.tsx     # Savings goal management
+├── lib/
+│   └── utils.ts            # Utility functions
+└── types/
+    └── finance.ts          # TypeScript type definitions
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).

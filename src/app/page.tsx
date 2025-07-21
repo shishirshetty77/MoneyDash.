@@ -1,103 +1,141 @@
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+'use client';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+import { useState, useEffect } from 'react';
+import { Transaction, TransactionCategory, TransactionFilters } from '@/types';
+import TransactionForm from '@/app/components/TransactionForm';
+import TransactionList from '@/app/components/TransactionList';
+import Summary from '@/app/components/Summary';
+import TransactionChart from '@/app/components/TransactionChart';
+import SavingsGoals from '@/app/components/SavingsGoals';
+import { saveToLocalStorage, loadFromLocalStorage } from '@/app/utils/localStorage';
+
+export default function Home() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filters, setFilters] = useState<TransactionFilters>({
+    category: 'All',
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear()
+  });
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    const savedTransactions = loadFromLocalStorage<Transaction[]>('transactions', []);
+    const savedTheme = loadFromLocalStorage<string>('theme', 'light');
+    
+    setTransactions(savedTransactions);
+    setIsDarkMode(savedTheme === 'dark');
+    
+    // Apply theme to document
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  // Save transactions to localStorage whenever they change
+  useEffect(() => {
+    saveToLocalStorage('transactions', transactions);
+  }, [transactions]);
+
+  // Save theme to localStorage whenever it changes
+  useEffect(() => {
+    const theme = isDarkMode ? 'dark' : 'light';
+    saveToLocalStorage('theme', theme);
+    
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  const addTransaction = (transaction: Omit<Transaction, 'id'>) => {
+    const newTransaction: Transaction = {
+      ...transaction,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+    };
+    setTransactions(prev => [...prev, newTransaction]);
+  };
+
+  const deleteTransaction = (id: string) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  const exportToCSV = () => {
+    const csvContent = [
+      ['Date', 'Title', 'Amount', 'Category'],
+      ...transactions.map(t => [
+        t.date,
+        t.title,
+        t.amount.toString(),
+        t.category
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <header className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Personal Finance Tracker
+              </h1>
+              <div className="flex gap-2">
+                <button
+                  onClick={exportToCSV}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Export CSV
+                </button>
+                <button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  {isDarkMode ? '🌙' : '☀️'}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Form and Goals */}
+            <div className="space-y-8">
+              <TransactionForm onAddTransaction={addTransaction} />
+              <SavingsGoals transactions={transactions} isDarkMode={isDarkMode} />
+            </div>
+
+            {/* Middle Column - Summary and Chart */}
+            <div className="space-y-8">
+              <Summary transactions={transactions} filters={filters} />
+              <TransactionChart transactions={transactions} isDarkMode={isDarkMode} />
+            </div>
+
+            {/* Right Column - Transaction List */}
+            <div>
+              <TransactionList 
+                transactions={transactions}
+                filters={filters}
+                onFiltersChange={setFilters}
+                onDeleteTransaction={deleteTransaction}
+              />
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }

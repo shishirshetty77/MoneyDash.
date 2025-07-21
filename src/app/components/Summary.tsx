@@ -56,20 +56,30 @@ export default function Summary({ transactions, filters }: SummaryProps) {
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-8 transition-all duration-300 hover:shadow-2xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-2">
-          Financial Overview
-        </h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">
-          {getMonthName(filters.month)} {filters.year}
-        </p>
-      </div>
+    <div className="relative">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900/40 dark:via-blue-900/20 dark:to-purple-900/40 rounded-3xl opacity-60"></div>
+      <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/60 backdrop-blur-2xl rounded-3xl border border-white/20 dark:border-slate-700/50 shadow-2xl"></div>
+      
+      <div className="relative z-10 p-8 md:p-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl mb-6">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 dark:from-white dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent mb-3">
+            {getMonthName(filters.month)} {filters.year}
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 text-lg">
+            Your financial performance at a glance
+          </p>
+        </div>
 
-      {/* Main Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Income Card */}
+        {/* Main Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-8">
+          {/* Income Card */}
         <div className="group relative overflow-hidden bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900 rounded-xl p-6 border border-emerald-200 dark:border-emerald-800 transition-all duration-300 hover:scale-105 hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-emerald-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
@@ -96,7 +106,7 @@ export default function Summary({ transactions, filters }: SummaryProps) {
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300 transition-all duration-300 group-hover:text-emerald-600">
+              <p className="text-4xl xl:text-5xl font-bold text-emerald-700 dark:text-emerald-300 transition-all duration-300 group-hover:text-emerald-600 break-words">
                 {formatCurrency(income)}
               </p>
             </div>
@@ -130,7 +140,7 @@ export default function Summary({ transactions, filters }: SummaryProps) {
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-3xl font-bold text-rose-700 dark:text-rose-300 transition-all duration-300 group-hover:text-rose-600">
+              <p className="text-4xl xl:text-5xl font-bold text-rose-700 dark:text-rose-300 transition-all duration-300 group-hover:text-rose-600 break-words">
                 {formatCurrency(expenses)}
               </p>
             </div>
@@ -187,7 +197,7 @@ export default function Summary({ transactions, filters }: SummaryProps) {
             </div>
             <div className="space-y-1">
               <p
-                className={`text-3xl font-bold ${
+                className={`text-4xl xl:text-5xl font-bold break-words ${
                   savings >= 0
                     ? 'text-blue-700 dark:text-blue-300 group-hover:text-blue-600'
                     : 'text-amber-700 dark:text-amber-300 group-hover:text-amber-600'
@@ -198,6 +208,7 @@ export default function Summary({ transactions, filters }: SummaryProps) {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       {/* Summary Bar */}

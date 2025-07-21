@@ -1,12 +1,28 @@
 export interface Transaction {
   id: string;
-  title: string;
+  title?: string;
+  description?: string;
   amount: number;
-  category: BudgetCategory;
+  category: TransactionCategory;
   type: 'income' | 'expense';
   date: string;
-  createdAt: string;
 }
+
+export interface TransactionFilters {
+  category: string;
+  month: number;
+  year: number;
+}
+
+export type TransactionCategory = 
+  | 'Food & Dining'
+  | 'Transportation'
+  | 'Entertainment'
+  | 'Bills & Utilities'
+  | 'Healthcare'
+  | 'Shopping'
+  | 'Business'
+  | 'Other';
 
 export interface SavingsGoal {
   id: string;

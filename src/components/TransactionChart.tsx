@@ -88,7 +88,7 @@ export default function TransactionChart({ transactions, isDarkMode }: Transacti
   const textColor = isDarkMode ? '#e5e7eb' : '#374151';
   const gridColor = isDarkMode ? '#374151' : '#e5e7eb';
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{color: string; dataKey: string; name: string; value: number; payload: {percentage: number}}>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className={`p-3 rounded-lg shadow-lg border ${
@@ -97,7 +97,7 @@ export default function TransactionChart({ transactions, isDarkMode }: Transacti
             : 'bg-white border-gray-200 text-gray-900'
         }`}>
           <p className="font-semibold">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.dataKey === 'amount' 
                 ? `${entry.name}: $${entry.value.toFixed(2)} (${entry.payload.percentage.toFixed(1)}%)`

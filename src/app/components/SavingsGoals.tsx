@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import React, { useState, useRef } from 'react';
+import { PlusIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
 interface SavingsGoal {
   id: string;
@@ -92,6 +92,32 @@ export default function SavingsGoals({ isDarkMode }: SavingsGoalsProps) {
     return diffDays;
   };
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const itemsPerView = 3; // Number of goals to show at once
+  const maxIndex = Math.max(0, goals.length - itemsPerView);
+
+  const scrollToIndex = (index: number) => {
+    if (carouselRef.current) {
+      const itemHeight = carouselRef.current.scrollHeight / goals.length;
+      carouselRef.current.scrollTo({
+        top: itemHeight * index,
+        behavior: 'smooth'
+      });
+      setCurrentIndex(index);
+    }
+  };
+
+  const goToPrevious = () => {
+    const newIndex = Math.max(0, currentIndex - 1);
+    scrollToIndex(newIndex);
+  };
+
+  const goToNext = () => {
+    const newIndex = Math.min(maxIndex, currentIndex + 1);
+    scrollToIndex(newIndex);
+  };
+
   const cardBgColor = isDarkMode ? 'bg-gray-800' : 'bg-white';
   const textColor = isDarkMode ? 'text-white' : 'text-gray-900';
   const mutedTextColor = isDarkMode ? 'text-gray-300' : 'text-gray-600';
@@ -167,93 +193,149 @@ export default function SavingsGoals({ isDarkMode }: SavingsGoalsProps) {
         </div>
       )}
 
-      {/* Goals List */}
-      <div className="space-y-4">
-        {goals.map((goal) => {
-          const progress = getProgressPercentage(goal.currentAmount, goal.targetAmount);
-          const daysLeft = getDaysUntilDeadline(goal.deadline);
-          const isOverdue = daysLeft < 0;
-          
-          return (
-            <div key={goal.id} className={`p-4 rounded-lg border ${borderColor}`}>
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold">{goal.name}</h3>
-                  <p className={`text-sm ${mutedTextColor}`}>{goal.category}</p>
-                </div>
-                <button
-                  onClick={() => handleDeleteGoal(goal.id)}
-                  className="text-red-500 hover:text-red-600 transition-colors"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                </button>
-              </div>
+      {/* Goals Carousel */}
+      <div className="relative">
+        {goals.length > itemsPerView && (
+          <button
+            onClick={goToPrevious}
+            disabled={currentIndex === 0}
+            className={`absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-4 z-10 p-3 rounded-full shadow-lg transition-all ${
+              isDarkMode 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-500' 
+                : 'bg-white hover:bg-gray-50 text-gray-700 disabled:bg-gray-100 disabled:text-gray-400'
+            }`}
+          >
+            <ChevronUpIcon className="w-5 h-5" />
+          </button>
+        )}
 
-              <div className="mb-3">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>${goal.currentAmount.toLocaleString()} saved</span>
-                  <span>${goal.targetAmount.toLocaleString()} goal</span>
+        <div 
+          ref={carouselRef}
+          className="flex flex-col space-y-4 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800"
+          style={{ maxHeight: '540px' }} // Height for exactly 3 items (each ~180px including spacing)
+        >
+          {goals.map((goal) => {
+            const progress = getProgressPercentage(goal.currentAmount, goal.targetAmount);
+            const daysLeft = getDaysUntilDeadline(goal.deadline);
+            const isOverdue = daysLeft < 0;
+            
+            return (
+              <div 
+                key={goal.id} 
+                className={`flex-shrink-0 w-full p-4 rounded-lg border ${borderColor}`}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-lg font-semibold">{goal.name}</h3>
+                    <p className={`text-sm ${mutedTextColor}`}>{goal.category}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    className="text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all duration-300 ${
-                      progress === 100 ? 'bg-green-500' : 'bg-blue-500'
-                    }`}
-                    style={{ width: `${progress}%` }}
-                  ></div>
+
+                <div className="mb-3">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>${goal.currentAmount.toLocaleString()} saved</span>
+                    <span>${goal.targetAmount.toLocaleString()} goal</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all duration-300 ${
+                        progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-sm mt-1">
+                    <span className={progress === 100 ? 'text-green-500' : ''}>
+                      {progress.toFixed(1)}% complete
+                    </span>
+                  </div>
                 </div>
-                <div className="text-sm mt-1">
-                  <span className={progress === 100 ? 'text-green-500' : ''}>
-                    {progress.toFixed(1)}% complete
+
+                <div className="flex justify-between items-center text-sm">
+                  <span className={`${isOverdue ? 'text-red-500' : mutedTextColor}`}>
+                    {isOverdue 
+                      ? `${Math.abs(daysLeft)} days overdue` 
+                      : `${daysLeft} days left`
+                    }
                   </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const amount = prompt('Enter amount to add to savings:');
+                        if (amount && !isNaN(parseFloat(amount))) {
+                          updateGoalProgress(goal.id, parseFloat(amount));
+                        }
+                      }}
+                      className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                    >
+                      Add Money
+                    </button>
+                    <button
+                      onClick={() => {
+                        const amount = prompt('Enter amount to withdraw:');
+                        if (amount && !isNaN(parseFloat(amount))) {
+                          updateGoalProgress(goal.id, -parseFloat(amount));
+                        }
+                      }}
+                      className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                    >
+                      Withdraw
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center text-sm">
-                <span className={`${isOverdue ? 'text-red-500' : mutedTextColor}`}>
-                  {isOverdue 
-                    ? `${Math.abs(daysLeft)} days overdue` 
-                    : `${daysLeft} days left`
-                  }
-                </span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      const amount = prompt('Enter amount to add to savings:');
-                      if (amount && !isNaN(parseFloat(amount))) {
-                        updateGoalProgress(goal.id, parseFloat(amount));
-                      }
-                    }}
-                    className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                  >
-                    Add Money
-                  </button>
-                  <button
-                    onClick={() => {
-                      const amount = prompt('Enter amount to withdraw:');
-                      if (amount && !isNaN(parseFloat(amount))) {
-                        updateGoalProgress(goal.id, -parseFloat(amount));
-                      }
-                    }}
-                    className="px-3 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
-                  >
-                    Withdraw
-                  </button>
-                </div>
+                {progress === 100 && (
+                  <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-sm">
+                    🎉 Goal achieved! Congratulations!
+                  </div>
+                )}
               </div>
+            );
+          })}
+        </div>
 
-              {progress === 100 && (
-                <div className="mt-2 p-2 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded text-sm">
-                  🎉 Goal achieved! Congratulations!
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {goals.length > itemsPerView && (
+          <button
+            onClick={goToNext}
+            disabled={currentIndex >= maxIndex}
+            className={`absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-4 z-10 p-3 rounded-full shadow-lg transition-all ${
+              isDarkMode 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white disabled:bg-gray-800 disabled:text-gray-500' 
+                : 'bg-white hover:bg-gray-50 text-gray-700 disabled:bg-gray-100 disabled:text-gray-400'
+            }`}
+          >
+            <ChevronDownIcon className="w-5 h-5" />
+          </button>
+        )}
 
         {goals.length === 0 && (
           <div className="text-center py-8">
             <p className={mutedTextColor}>No savings goals yet. Create your first goal to get started!</p>
+          </div>
+        )}
+        
+        {/* Carousel Dots */}
+        {goals.length > itemsPerView && (
+          <div className="flex justify-center mt-4 space-x-2">
+            {Array.from({ length: maxIndex + 1 }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToIndex(i)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  i === currentIndex
+                    ? 'bg-blue-500'
+                    : isDarkMode 
+                      ? 'bg-gray-600' 
+                      : 'bg-gray-300'
+                }`}
+              />
+            ))}
           </div>
         )}
       </div>

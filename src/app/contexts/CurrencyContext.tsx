@@ -45,7 +45,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const savedCurrency = loadFromLocalStorage<Currency>('currency', null);
+    const savedCurrency = loadFromLocalStorage<Currency>('currency', 'USD');
     if (savedCurrency && currencies[savedCurrency]) {
       setCurrencyState(savedCurrency);
     }

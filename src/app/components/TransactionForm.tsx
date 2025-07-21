@@ -10,12 +10,12 @@ interface TransactionFormProps {
 const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) => {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState<TransactionCategory>('food');
+  const [category, setCategory] = useState<TransactionCategory>('Food & Dining');
   const [type, setType] = useState<'income' | 'expense'>('expense');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const categories: TransactionCategory[] = [
-    'food', 'transport', 'entertainment', 'bills', 'healthcare', 'shopping', 'salary', 'other'
+    'Food & Dining', 'Transportation', 'Entertainment', 'Bills & Utilities', 'Healthcare', 'Shopping', 'Business', 'Other'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,6 +36,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
       description: description.trim(),
       amount: type === 'expense' ? -numAmount : numAmount,
       category,
+      type,
       date,
     };
 
@@ -44,15 +45,30 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
     // Reset form
     setDescription('');
     setAmount('');
-    setCategory('food');
+    setCategory('Food & Dining');
     setType('expense');
     setDate(new Date().toISOString().split('T')[0]);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add Transaction</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="relative">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl opacity-60"></div>
+      <div className="relative bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-slate-700/50 shadow-xl p-8">
+        {/* Header */}
+        <div className="flex items-center mb-8">
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-4">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Add Transaction</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">Record your income or expense</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Type
@@ -112,7 +128,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           >
             {categories.map((cat) => (
               <option key={cat} value={cat}>
-                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                {cat}
               </option>
             ))}
           </select>
@@ -139,6 +155,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
           Add Transaction
         </button>
       </form>
+      </div>
     </div>
   );
 };

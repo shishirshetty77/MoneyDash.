@@ -2,9 +2,17 @@ import { supabase } from './supabaseClient'
 
 // Transactions
 export const getTransactions = async () => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Error getting user:', userError)
+    return []
+  }
+  
   const { data, error } = await supabase
     .from('transactions')
     .select('*')
+    .eq('user_id', user.id)
     .order('date', { ascending: false })
   
   if (error) {
@@ -15,7 +23,12 @@ export const getTransactions = async () => {
 }
 
 export const createTransaction = async (transaction) => {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Error getting user:', userError)
+    throw new Error('User not authenticated')
+  }
   
   const { data, error } = await supabase
     .from('transactions')
@@ -61,9 +74,17 @@ export const deleteTransaction = async (id) => {
 
 // Budgets
 export const getBudgets = async () => {
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Error getting user:', userError)
+    return []
+  }
+  
   const { data, error } = await supabase
     .from('budgets')
     .select('*')
+    .eq('user_id', user.id)
     .order('category')
   
   if (error) {
@@ -74,7 +95,12 @@ export const getBudgets = async () => {
 }
 
 export const createBudget = async (budget) => {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Error getting user:', userError)
+    throw new Error('User not authenticated')
+  }
   
   const { data, error } = await supabase
     .from('budgets')
@@ -133,7 +159,12 @@ export const getCategories = async () => {
 }
 
 export const createCategory = async (category) => {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    console.error('Error getting user:', userError)
+    throw new Error('User not authenticated')
+  }
   
   const { data, error } = await supabase
     .from('categories')

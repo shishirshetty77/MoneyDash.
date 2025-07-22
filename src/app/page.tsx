@@ -11,11 +11,14 @@ import SavingsGoals from '@/app/components/SavingsGoals';
 import BudgetManager from '@/app/components/BudgetManager';
 import { saveToLocalStorage, loadFromLocalStorage } from '@/app/utils/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
-import { getTransactions, addTransaction as addTransactionDb, deleteTransaction as deleteTransactionDb, getBudgets, addBudget, updateBudget, deleteBudget } from '@/lib/supabase-data';
+import { getTransactions, createTransaction as addTransactionDb, deleteTransaction as deleteTransactionDb, getBudgets, createBudget as addBudget, updateBudget, deleteBudget } from '@/lib/supabase-data';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { LogOut, User } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filters] = useState<TransactionFilters>({
     category: 'All',
@@ -24,12 +27,11 @@ export default function Home() {
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth/login');
+      router.push('/login');
     }
   }, [user, loading, router]);
 
@@ -38,7 +40,6 @@ export default function Home() {
     async function fetchData() {
       if (!user) return;
       
-      setDataLoading(true);
       try {
         const [transactionData, budgetData] = await Promise.all([
           getTransactions(),
@@ -49,8 +50,6 @@ export default function Home() {
         setBudgets(budgetData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
-      } finally {
-        setDataLoading(false);
       }
     }
 
@@ -176,12 +175,12 @@ export default function Home() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={exportToCSV}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 rounded-xl transition-all duration-200 hover:scale-105"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 rounded-xl transition-all duration-200 hover:scale-105"
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   </svg>
-                  Export Data
+                  Export
                 </button>
                 <button
                   onClick={() => setIsDarkMode(!isDarkMode)}
@@ -197,6 +196,32 @@ export default function Home() {
                     </svg>
                   )}
                 </button>
+                
+                {/* User Info */}
+                {user && (
+                  <>
+                    <div className="flex items-center space-x-2 px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={user.user_metadata?.avatar_url} alt={user.user_metadata?.full_name} />
+                        <AvatarFallback>
+                          <User className="h-3 w-3" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                        {user.user_metadata?.full_name || user.email}
+                      </span>
+                    </div>
+                    <Button
+                      onClick={signOut}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center space-x-1 h-8"
+                    >
+                      <LogOut className="h-3 w-3" />
+                      <span className="text-xs">Sign Out</span>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

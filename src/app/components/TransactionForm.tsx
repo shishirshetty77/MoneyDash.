@@ -34,7 +34,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction }) =
 
     const transaction = {
       description: description.trim(),
-      amount: type === 'expense' ? -numAmount : numAmount,
+      amount: numAmount, // Always send positive amount, let the backend/database handle the sign based on type
       category,
       type,
       date,

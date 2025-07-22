@@ -116,7 +116,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      transaction.amount > 0 
+                      transaction.type === 'income'
                         ? 'bg-green-500' 
                         : 'bg-red-500'
                     }`}
@@ -138,15 +138,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <div className="text-right">
                   <div
                     className={`font-semibold text-sm ${
-                      transaction.amount > 0
+                      transaction.type === 'income'
                         ? 'text-green-600 dark:text-green-400'
                         : 'text-red-600 dark:text-red-400'
                     }`}
                   >
-                    {transaction.amount > 0 ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {transaction.amount > 0 ? 'Income' : 'Expense'}
+                    {transaction.type === 'income' ? 'Income' : 'Expense'}
                   </div>
                 </div>
                 

@@ -7,9 +7,9 @@ import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from 
 interface BudgetManagerProps {
   budgets: Budget[];
   transactions: Transaction[];
-  onCreateBudget: (budget: Omit<Budget, 'id'>) => void;
-  onUpdateBudget: (id: string, budget: Partial<Budget>) => void;
-  onDeleteBudget: (id: string) => void;
+  onCreateBudget: (budget: Omit<Budget, 'id'>) => Promise<void>;
+  onUpdateBudget: (id: string, budget: Partial<Budget>) => Promise<void>;
+  onDeleteBudget: (id: string) => Promise<void>;
   isDarkMode: boolean;
 }
 
@@ -84,7 +84,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({
     setIsFormOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.amount || !formData.startDate || !formData.endDate) {
@@ -99,14 +99,19 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({
       startDate: formData.startDate,
       endDate: formData.endDate,
       isRecurring: formData.isRecurring,
-      recurringType: formData.recurringType,
-      createdAt: new Date().toISOString()
+      recurringType: formData.recurringType
     };
 
-    if (editingBudget) {
-      onUpdateBudget(editingBudget.id, budgetData);
-    } else {
-      onCreateBudget(budgetData);
+    try {
+      if (editingBudget) {
+        await onUpdateBudget(editingBudget.id, budgetData);
+      } else {
+        await onCreateBudget(budgetData);
+      }
+    } catch (error) {
+      console.error('Error in budget operation:', error);
+      alert('Failed to save budget. Please try again.');
+      return;
     }
 
     resetForm();

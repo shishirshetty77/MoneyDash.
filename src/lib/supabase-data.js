@@ -1,5 +1,40 @@
 import { supabase } from './supabaseClient'
 
+// Utility functions for camelCase/snake_case conversion
+const camelToSnake = (obj) => {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(camelToSnake)
+  }
+  
+  const result = {}
+  for (const [key, value] of Object.entries(obj)) {
+    const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+    result[snakeKey] = camelToSnake(value)
+  }
+  return result
+}
+
+const snakeToCamel = (obj) => {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(snakeToCamel)
+  }
+  
+  const result = {}
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    result[camelKey] = snakeToCamel(value)
+  }
+  return result
+}
+
 // Transactions
 export const getTransactions = async () => {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -91,7 +126,8 @@ export const getBudgets = async () => {
     console.error('Error fetching budgets:', error)
     return []
   }
-  return data
+  // Convert snake_case to camelCase for frontend
+  return data.map(budget => snakeToCamel(budget))
 }
 
 export const createBudget = async (budget) => {
@@ -102,10 +138,13 @@ export const createBudget = async (budget) => {
     throw new Error('User not authenticated')
   }
   
+  // Convert camelCase to snake_case for database
+  const budgetSnakeCase = camelToSnake(budget)
+  
   const { data, error } = await supabase
     .from('budgets')
     .insert([{
-      ...budget,
+      ...budgetSnakeCase,
       user_id: user.id
     }])
     .select()
@@ -114,13 +153,17 @@ export const createBudget = async (budget) => {
     console.error('Error creating budget:', error)
     throw error
   }
-  return data[0]
+  // Convert response back to camelCase
+  return snakeToCamel(data[0])
 }
 
 export const updateBudget = async (id, updates) => {
+  // Convert camelCase to snake_case for database
+  const updatesSnakeCase = camelToSnake(updates)
+  
   const { data, error } = await supabase
     .from('budgets')
-    .update(updates)
+    .update(updatesSnakeCase)
     .eq('id', id)
     .select()
   
@@ -128,7 +171,8 @@ export const updateBudget = async (id, updates) => {
     console.error('Error updating budget:', error)
     throw error
   }
-  return data[0]
+  // Convert response back to camelCase
+  return snakeToCamel(data[0])
 }
 
 export const deleteBudget = async (id) => {

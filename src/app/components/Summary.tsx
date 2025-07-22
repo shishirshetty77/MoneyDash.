@@ -21,12 +21,12 @@ export default function Summary({ transactions, filters }: SummaryProps) {
 
   // Calculate totals
   const income = filteredTransactions
-    .filter((t) => t.amount > 0)
+    .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const expenses = filteredTransactions
-    .filter((t) => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    .filter((t) => t.type === 'expense')
+    .reduce((sum, t) => sum + t.amount, 0);
 
   const savings = income - expenses;
 

@@ -79,9 +79,15 @@ export default function Home() {
 
   const addTransaction = async (transaction: Omit<Transaction, 'id'>) => {
     try {
+      console.log('Adding transaction:', transaction);
       const newTransaction = await addTransactionDb(transaction);
+      console.log('New transaction created:', newTransaction);
       if (newTransaction) {
-        setTransactions(prev => [...prev, newTransaction]);
+        setTransactions(prev => {
+          const updated = [...prev, newTransaction];
+          console.log('Updated transactions list:', updated);
+          return updated;
+        });
       }
     } catch (error) {
       console.error('Error adding transaction:', error);

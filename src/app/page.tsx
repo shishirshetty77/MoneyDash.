@@ -11,7 +11,8 @@ import SavingsGoals from '@/app/components/SavingsGoals';
 import BudgetManager from '@/app/components/BudgetManager';
 import { saveToLocalStorage, loadFromLocalStorage } from '@/app/utils/localStorage';
 import { useAuth } from '@/contexts/AuthContext';
-import { getTransactions, createTransaction as addTransactionDb, deleteTransaction as deleteTransactionDb, getBudgets, createBudget as addBudget, updateBudget, deleteBudget } from '@/lib/supabase-data';
+import { getTransactions, createTransaction as addTransactionDb, deleteTransaction as deleteTransactionDb } from '@/lib/supabase-data';
+import { budgetService } from '@/lib/budget-service';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
@@ -27,6 +28,11 @@ export default function Home() {
   });
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  
+  // Add useEffect to log budget state changes
+  useEffect(() => {
+    console.log('🔄 Budgets state changed:', budgets.length, 'budgets:', budgets);
+  }, [budgets]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -43,7 +49,7 @@ export default function Home() {
       try {
         const [transactionData, budgetData] = await Promise.all([
           getTransactions(),
-          getBudgets()
+          budgetService.getBudgets()
         ]);
         
         setTransactions(transactionData || []);
@@ -104,33 +110,64 @@ export default function Home() {
   };
 
   const handleCreateBudget = async (budget: Omit<Budget, 'id' | 'createdAt'>) => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+    
     try {
-      const newBudget = await addBudget(budget);
+      console.log('Creating budget:', budget);
+      const newBudget = await budgetService.createBudget(budget);
+      console.log('New budget created:', newBudget);
+      
       if (newBudget) {
-        setBudgets(prev => [...prev, newBudget]);
+        // Re-fetch all budgets from backend to ensure state consistency
+        console.log('Re-fetching budgets to ensure UI consistency...');
+        const allBudgets = await budgetService.getBudgets();
+        console.log('All budgets fetched:', allBudgets);
+        console.log('About to call setBudgets with:', allBudgets?.length, 'budgets');
+        setBudgets(allBudgets || []);
+        console.log('setBudgets called - React should re-render now');
       }
     } catch (error) {
       console.error('Error creating budget:', error);
+      // You could add user-friendly error handling here
     }
   };
 
   const handleUpdateBudget = async (id: string, updatedBudget: Partial<Budget>) => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+    
     try {
-      const updated = await updateBudget(id, updatedBudget);
+      console.log('Updating budget:', id, updatedBudget);
+      const updated = await budgetService.updateBudget(id, updatedBudget);
+      console.log('Budget updated:', updated);
       if (updated) {
         setBudgets(prev => prev.map(b => b.id === id ? updated : b));
       }
     } catch (error) {
       console.error('Error updating budget:', error);
+      // You could add user-friendly error handling here
     }
   };
 
   const handleDeleteBudget = async (id: string) => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+    
     try {
-      await deleteBudget(id);
+      console.log('Deleting budget:', id);
+      await budgetService.deleteBudget(id);
+      console.log('Budget deleted successfully');
       setBudgets(prev => prev.filter(b => b.id !== id));
     } catch (error) {
       console.error('Error deleting budget:', error);
+      // You could add user-friendly error handling here
     }
   };
 

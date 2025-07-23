@@ -86,8 +86,11 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🎯 BudgetManager - handleSubmit called');
+    console.log('🎯 Form data:', formData);
     
     if (!formData.name || !formData.amount || !formData.startDate || !formData.endDate) {
+      console.log('❌ BudgetManager - Missing required fields');
       alert('Please fill in all required fields');
       return;
     }
@@ -102,19 +105,28 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({
       recurringType: formData.recurringType
     };
 
+    console.log('🎯 BudgetManager - Budget data to send:', budgetData);
+    console.log('🎯 BudgetManager - Editing budget?', !!editingBudget);
+
     try {
       if (editingBudget) {
+        console.log('🎯 BudgetManager - Calling onUpdateBudget');
         await onUpdateBudget(editingBudget.id, budgetData);
+        console.log('✅ BudgetManager - onUpdateBudget completed');
       } else {
+        console.log('🎯 BudgetManager - Calling onCreateBudget');
         await onCreateBudget(budgetData);
+        console.log('✅ BudgetManager - onCreateBudget completed');
       }
     } catch (error) {
-      console.error('Error in budget operation:', error);
+      console.error('❌ BudgetManager - Error in budget operation:', error);
       alert('Failed to save budget. Please try again.');
       return;
     }
 
+    console.log('🎯 BudgetManager - Calling resetForm');
     resetForm();
+    console.log('✅ BudgetManager - handleSubmit completed successfully');
   };
 
   const handleEdit = (budget: Budget) => {
